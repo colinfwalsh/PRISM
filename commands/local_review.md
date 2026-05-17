@@ -1,48 +1,50 @@
 ---
-description: Set up worktree for reviewing colleague's branch
+description: Code review of the current working branch (or a specified branch)
 ---
 
 # Local Review
 
-You are tasked with setting up a local review environment for a colleague's branch. This involves creating a worktree, setting up dependencies, and launching a new Claude Code session.
+You are tasked with performing a code review of changes on the current working branch, or on a branch specified as an argument.
 
 ## Process
 
-When invoked with a parameter like `gh_username:branchName`:
+1. **Determine the branch to review**:
+   - If an argument is provided, use it as the branch name to review.
+   - Otherwise, use the current branch (`git rev-parse --abbrev-ref HEAD`).
+   - Identify the base branch (usually `main` or `master` — check `git symbolic-ref refs/remotes/origin/HEAD` or fall back to `main`).
+   - If the branch to review is the same as the base branch, inform the user there is nothing to review and stop.
 
-1. **Parse the input**:
-   - Extract GitHub username and branch name from the format `username:branchname`
-   - If no parameter provided, ask for it in the format: `gh_username:branchName`
+2. **Gather the diff**:
+   - Run `git fetch origin` to make sure refs are up to date.
+   - Get the list of changed files: `git diff --name-status BASE...BRANCH`
+   - Get the full diff: `git diff BASE...BRANCH`
+   - Get the commit history: `git log --oneline BASE..BRANCH`
 
-2. **Extract ticket information**:
-   - Look for ticket numbers in the branch name (e.g., `eng-1696`, `ENG-1696`)
-   - Use this to create a short worktree directory name
-   - If no ticket found, use a sanitized version of the branch name
+3. **Review the changes**:
+   - Read each changed file in full (not just the diff) so context around the changes is clear.
+   - Evaluate the changes for:
+     - **Correctness**: bugs, logic errors, edge cases, error handling
+     - **Security**: injection risks, auth/authz issues, secret handling, OWASP concerns
+     - **Design**: appropriateness of abstractions, coupling, code organization
+     - **Consistency**: matches existing patterns and conventions in the codebase
+     - **Tests**: adequate coverage for the changes, missing test cases
+     - **Performance**: obvious inefficiencies, N+1 queries, unnecessary work
+     - **Readability**: naming, comments where genuinely needed, clarity
 
-3. **Set up the remote and worktree**:
-   - Determine the repo name from `basename $(git rev-parse --show-toplevel)` — this is both the project name and the GitHub repo name.
-   - Check if the remote already exists using `git remote -v`
-   - If not, add it: `git remote add USERNAME git@github.com:USERNAME/PROJECT_NAME`
-   - Fetch from the remote: `git fetch USERNAME`
-   - Create worktree: `git worktree add -b BRANCHNAME ~/wt/PROJECT_NAME/SHORT_NAME USERNAME/BRANCHNAME`
-
-4. **Configure the worktree**:
-   - Copy Claude settings if present: `cp .claude/settings.local.json WORKTREE/.claude/ 2>/dev/null || true`
-   - Run setup if the project has a Makefile target: `make -C WORKTREE setup` (skip if no `setup` target exists)
-
-## Error Handling
-
-- If worktree already exists, inform the user they need to remove it first
-- If remote fetch fails, check if the username/repo exists
-- If setup fails, provide the error but continue with the launch
+4. **Report findings**:
+   - Group findings by severity: **Blocking**, **Should fix**, **Nits/suggestions**.
+   - For each finding, cite the file and line number (`path/to/file.ts:42`).
+   - Be specific — explain *what* is wrong and *why*, and propose a concrete fix where possible.
+   - If the branch looks good overall, say so explicitly; don't manufacture issues.
 
 ## Example Usage
 
 ```
-/local_review samdickson22:sam/eng-1696-hotkey-for-yolo-mode
+/local_review
 ```
+Reviews the current working branch against the base branch.
 
-This will:
-- Add 'samdickson22' as a remote (using the current repo name — e.g. if CWD is `~/code/my-app`, this resolves to `git@github.com:samdickson22/my-app`)
-- Create worktree at `~/wt/{project_name}/eng-1696`
-- Set up the environment
+```
+/local_review feature/new-thing
+```
+Reviews `feature/new-thing` against the base branch.

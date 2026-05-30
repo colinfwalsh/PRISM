@@ -6,6 +6,19 @@ description: Validate implementation against plan, verify success criteria, iden
 
 You are tasked with validating that an implementation plan was correctly executed, verifying all success criteria and identifying any deviations or issues.
 
+## Use Subagents As Much As Possible
+
+Please use subagents as much as possible — parallelize validation across files and success criteria, preserve main-context budget, and route each task to the agent best suited for it. Available subagents:
+
+- **architecture-agent** — Makes design/judgment calls (which pattern, where code lives, how to phase work) and decomposes large tasks into coder-agent-ready sub-tasks. Read-only.
+- **coder-agent** — Implements small, well-defined coding tasks from a precise spec (files, exact changes, acceptance criteria).
+- **codebase-locator** — Finds WHERE files, directories, and components live (a smarter Grep/Glob/LS).
+- **codebase-analyzer** — Explains HOW specific code works, with file:line detail.
+- **codebase-pattern-finder** — Finds similar implementations and concrete code examples to model after.
+- **thoughts-locator** — Discovers relevant documents in the `~/thoughts/` directory.
+- **thoughts-analyzer** — Deep-dives a specific thoughts/research document to extract key insights.
+- **web-search-researcher** — Researches external/web documentation and returns findings with links.
+
 ## Initial Setup
 
 When invoked:

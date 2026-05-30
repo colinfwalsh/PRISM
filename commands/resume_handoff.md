@@ -6,6 +6,19 @@ description: Resume work from handoff document with context analysis and validat
 
 You are tasked with resuming work from a handoff document through an interactive process. These handoffs contain critical context, learnings, and next steps from previous work sessions that need to be understood and continued.
 
+## Use Subagents As Much As Possible
+
+Please use subagents as much as possible — parallelize work, preserve main-context budget, and route each task to the agent best suited for it. (Exception: read the handoff document and the plan/research files it links yourself in the main context, not via a sub-agent.) Available subagents:
+
+- **architecture-agent** — Makes design/judgment calls (which pattern, where code lives, how to phase work) and decomposes large tasks into coder-agent-ready sub-tasks. Read-only.
+- **coder-agent** — Implements small, well-defined coding tasks from a precise spec (files, exact changes, acceptance criteria).
+- **codebase-locator** — Finds WHERE files, directories, and components live (a smarter Grep/Glob/LS).
+- **codebase-analyzer** — Explains HOW specific code works, with file:line detail.
+- **codebase-pattern-finder** — Finds similar implementations and concrete code examples to model after.
+- **thoughts-locator** — Discovers relevant documents in the `~/thoughts/` directory.
+- **thoughts-analyzer** — Deep-dives a specific thoughts/research document to extract key insights.
+- **web-search-researcher** — Researches external/web documentation and returns findings with links.
+
 ## Initial Response
 
 When this command is invoked:

@@ -7,6 +7,19 @@ description: Create handoff document for transferring work to another session
 You are tasked with writing a handoff document to hand off your work to another agent in a new session. You will create a handoff document that is thorough, but also **concise**. The goal is to compact and summarize your context without losing any of the key details of what you're working on.
 
 
+## Use Subagents As Much As Possible
+
+Please use subagents as much as possible — parallelize work, preserve main-context budget, and route each task to the agent best suited for it. Available subagents:
+
+- **architecture-agent** — Makes design/judgment calls (which pattern, where code lives, how to phase work) and decomposes large tasks into coder-agent-ready sub-tasks. Read-only.
+- **coder-agent** — Implements small, well-defined coding tasks from a precise spec (files, exact changes, acceptance criteria).
+- **codebase-locator** — Finds WHERE files, directories, and components live (a smarter Grep/Glob/LS).
+- **codebase-analyzer** — Explains HOW specific code works, with file:line detail.
+- **codebase-pattern-finder** — Finds similar implementations and concrete code examples to model after.
+- **thoughts-locator** — Discovers relevant documents in the `~/thoughts/` directory.
+- **thoughts-analyzer** — Deep-dives a specific thoughts/research document to extract key insights.
+- **web-search-researcher** — Researches external/web documentation and returns findings with links.
+
 ## Process
 ### 1. Filepath & Metadata
 Use the following information to understand how to create your document:

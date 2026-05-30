@@ -6,6 +6,19 @@ description: Implement technical plans from ~/thoughts/{project_name}/plans with
 
 You are tasked with implementing an approved technical plan from `~/thoughts/{project_name}/plans/` (where `{project_name}` is the basename of the current working directory). These plans contain phases with specific changes and success criteria.
 
+## Use Subagents As Much As Possible
+
+Please use subagents as much as possible — you are the conductor, not the implementer. Parallelize work, preserve main-context budget, and route each task to the agent best suited for it. Available subagents:
+
+- **architecture-agent** — Makes design/judgment calls (which pattern, where code lives, how to phase work) and decomposes large tasks into coder-agent-ready sub-tasks. Read-only.
+- **coder-agent** — Implements small, well-defined coding tasks from a precise spec (files, exact changes, acceptance criteria). Your default for every phase step.
+- **codebase-locator** — Finds WHERE files, directories, and components live (a smarter Grep/Glob/LS).
+- **codebase-analyzer** — Explains HOW specific code works, with file:line detail.
+- **codebase-pattern-finder** — Finds similar implementations and concrete code examples to model after.
+- **thoughts-locator** — Discovers relevant documents in the `~/thoughts/` directory.
+- **thoughts-analyzer** — Deep-dives a specific thoughts/research document to extract key insights.
+- **web-search-researcher** — Researches external/web documentation and returns findings with links.
+
 ## Getting Started
 
 When given a plan path:
@@ -21,8 +34,8 @@ If no plan path provided, ask for one.
 ## Implementation Philosophy
 
 Plans are carefully designed, but reality can be messy. Your job is to:
+- Drive each phase to completion by **delegating execution to coder-agent** and design calls to architecture-agent — you are the conductor, not the implementer
 - Follow the plan's intent while adapting to what you find
-- Implement each phase fully before moving to the next
 - Verify your work makes sense in the broader codebase context
 - Update checkboxes in the plan as you complete sections
 
@@ -40,22 +53,34 @@ If you encounter a mismatch:
   How should I proceed?
   ```
 
-## Using coder-agent and architecture-agent
+## Default workflow: delegate every phase step
 
-Implementation is the natural place to lean on the two action-oriented sub-agents:
+**For each phase step in the plan, your default action is to invoke coder-agent.** You are not the implementer in this command — coder-agent is. The main context's job is to read the plan, route work to the right sub-agent, verify the report, and check off the plan.
 
-- **coder-agent** — hand it well-defined phase steps. If a phase says "in `path/to/file.ts:45-67`, replace the inline validation with a call to `validateFoo`, add the corresponding test, run `make check test`", that's exactly the spec coder-agent expects: files, exact change, acceptance criteria, out-of-scope. It will execute and verify, returning either `COMPLETE` (with the commands it ran) or one of three structured failure reports.
+### The routing rule
 
-- **architecture-agent** — escalate when you hit ambiguity. If a phase references a pattern but the codebase has competing options, or if the plan says "add validation" without committing to where, invoke architecture-agent instead of guessing. It returns a grounded decision (with `file:line` evidence) and, if the work is larger than a single coder-agent invocation, a sequence of coder-agent-ready sub-task specs.
+For every phase step, pick exactly one:
 
-**Decision tree per phase**:
-1. Phase is already well-defined (specific files, exact change, criteria) → **coder-agent**
-2. Phase is ambiguous or larger than a single coder-agent task → **architecture-agent**, then **coder-agent** on its resulting sub-tasks
-3. Phase is small enough that delegation overhead exceeds the work itself (e.g., a 2-3 line edit) → do it directly in the main context
+1. **coder-agent** — the default. Use whenever the step names files, describes the exact change, and has acceptance criteria. Most plan phases meet this bar.
+2. **architecture-agent** — use when the step requires a judgment call coder-agent can't make: the codebase has competing patterns, the "right place" for the code is contested, the step is too large for a single coder-agent invocation, or the spec says "add validation" without saying where/how. architecture-agent returns a decision plus coder-agent-ready sub-tasks; then invoke coder-agent on each.
+3. **Main context (rare exception)** — only when ALL of these are true:
+   - The change is a single-file edit of ≤5 lines
+   - There are no acceptance commands to run (no tests, lint, typecheck)
+   - The change is mechanical (rename, reword, fix a typo)
 
-**If coder-agent returns `NEEDS ARCHITECTURE DECISION`**, follow its suggestion: invoke architecture-agent, then re-invoke coder-agent with the resulting spec. Don't try to make the call yourself in the main context — guessing here is the failure mode architecture-agent exists to prevent.
+   If you're tempted to take a step into the main context for any other reason ("it's faster," "I already understand it," "delegation has overhead"), that's the wrong call — delegate it.
 
-**Don't reflexively delegate.** Sub-agent invocations have overhead. Small, obvious edits stay in main context. The delegation pattern earns its keep on multi-file phases, ambiguous specs, or anywhere you'd otherwise wing it.
+### What coder-agent needs from you
+
+coder-agent will reject underspecified tasks. Before invoking it, make sure your spec has: goal, files to modify, exact change, acceptance criteria, and out-of-scope. Most plan phases already include these — copy them into the invocation verbatim. If the phase is missing any of these, that itself is a signal to invoke architecture-agent first to fill the gap, not to guess.
+
+### When coder-agent escalates
+
+**If coder-agent returns `NEEDS ARCHITECTURE DECISION`**, invoke architecture-agent with the decision question, then re-invoke coder-agent with the resulting sub-task spec. Don't try to make the call yourself in the main context — guessing here is the failure mode architecture-agent exists to prevent.
+
+**If coder-agent returns `TASK UNDERSPECIFIED`**, either tighten the spec from the plan and re-invoke, or invoke architecture-agent to decompose the work. Do not implement it inline.
+
+**If coder-agent returns `VERIFICATION FAILED`**, read its diagnosis. If the fix is mechanical, re-invoke with a refined spec. If the failure reveals a design issue, escalate to architecture-agent.
 
 ## Verification Approach
 

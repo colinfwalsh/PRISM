@@ -19,6 +19,7 @@ Please use subagents as much as possible — parallelize research, preserve main
 - **thoughts-locator** — Discovers relevant documents in the `~/thoughts/` directory.
 - **thoughts-analyzer** — Deep-dives a specific thoughts/research document to extract key insights.
 - **web-search-researcher** — Researches external/web documentation and returns findings with links.
+- **utility-agent** — Executes tool calls (primarily bash commands) on behalf of the main agent; use it to offload running commands, tests, builds, and searches and keep the main context focused.
 
 The steps below call out specific agents at each point; default to delegating to them rather than doing the work in the main context.
 

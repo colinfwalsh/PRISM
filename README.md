@@ -67,6 +67,7 @@ Slash commands in Claude Code (`/<name>`), or workflows in Windsurf.
 | `/create_plan` | Interactively build a detailed implementation plan grounded in the codebase (uses `opus`) |
 | `/iterate_plan` | Update an existing plan based on feedback, keeping it grounded in reality (uses `opus`) |
 | `/implement_plan` | Execute an approved plan phase-by-phase with verification |
+| `/quick_loop` | Express plan-and-implement loop for small, well-defined tasks; bails to `/create_plan` if the task is too big (uses `opus`) |
 | `/validate_plan` | Verify an implementation against its plan and surface deviations |
 | `/research_codebase` | Document the codebase as-is via parallel sub-agents (uses `opus`) |
 | `/create_handoff` | Write a concise handoff document to transfer work to another session |
@@ -107,6 +108,8 @@ A typical PRISM session walks through the acronym:
 3. **Implement** — `/implement_plan` drives execution, delegating to `architecture-agent` and `coder-agent` for the actual edits.
 4. **Synthesize** — `/create_handoff` at the end of a session; `/resume_handoff` at the start of the next.
 5. **Maintain** — `/validate_plan` to confirm the implementation matches the plan; `/local_review` to inspect a colleague's branch in an isolated worktree.
+
+For small, well-defined changes, `/quick_loop` collapses the **Plan → Implement** steps into a single express pass: quick targeted research, a short inline plan you sign off on, `coder-agent` execution, and verification — with a hard scope gate that stops and points you to `/create_plan` the moment the task proves too big (multiple subsystems, a design decision, ambiguous requirements). It writes no `~/thoughts/` artifacts; reach for the full pipeline when you need one.
 
 ### The `~/thoughts/` workspace
 

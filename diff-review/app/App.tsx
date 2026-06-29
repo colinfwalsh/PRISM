@@ -42,6 +42,7 @@ export default function App() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [changeRequests, setChangeRequests] = useState<ChangeRequest[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [finishing, setFinishing] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [notifPerm, setNotifPerm] = useState<NotificationPermission>(
@@ -204,6 +205,7 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFinish = useCallback(async () => {
+    setFinishing(true);
     await finish();
     // Server will exit; poll-failure handler shows the ended state
   }, []);
@@ -407,6 +409,7 @@ export default function App() {
       )}
       {toast && <div className="toast">{toast}</div>}
       {submitting && <LoadingOverlay message="Applying your change requests…" />}
+      {finishing && <LoadingOverlay message="Cleaning up…" />}
     </div>
   );
 }

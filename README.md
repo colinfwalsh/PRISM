@@ -73,6 +73,7 @@ Slash commands in Claude Code (`/<name>`), or workflows in Windsurf.
 | `/create_handoff` | Write a concise handoff document to transfer work to another session |
 | `/resume_handoff` | Resume work from a handoff document with context recovery |
 | `/local_review` | Set up a worktree to review a colleague's branch (`gh_username:branchName`) |
+| `/diff_review` | Open a git diff in the browser for interactive human review with a live agent feedback loop — questions answered live, change-requests applied on Submit, diff refreshes each round (uses `opus`) |
 
 ### Sub-agents (`agents/`) — Claude Code only
 
@@ -88,6 +89,7 @@ Specialized agents invoked via the `Task` tool with `subagent_type`.
 | `thoughts-locator` | Discovers relevant documents in the `~/thoughts/` directory. | `sonnet` |
 | `thoughts-analyzer` | Deep-dives into specific thoughts documents to extract key insights. | `sonnet` |
 | `web-search-researcher` | External research via `WebSearch` / `WebFetch`. | `sonnet` |
+| `diff-review-agent` | Drives the interactive browser diff-review loop — answers the reviewer's questions live and applies queued change-requests on submit, until Finish. | `opus` |
 
 The research/analyzer agents are strict **documentarians** — they describe what exists rather than recommending changes. `architecture-agent` and `coder-agent` are the action-oriented pair: architect decides and decomposes, coder executes.
 
@@ -96,6 +98,10 @@ The research/analyzer agents are strict **documentarians** — they describe wha
 | Skill | Description |
 | --- | --- |
 | `rlm-recursive-context` | Recursive Language Models-style handling for inputs that don't fit in one pass: treat long inputs as external objects, slice them, and stitch results from sub-call variables. |
+
+### Tools (`diff-review/`) — Claude Code only
+
+Runnable tool code lives at the **repo root**, separate from the markdown definitions. `diff-review/` is a zero-runtime-dependency Node server plus a React/Vite UI that backs `/diff_review` and the `diff-review-agent`. `install.sh` builds it (`npm ci && npm run build`) and deploys the runtime (`server/` + `dist/` + `package.json`) to `$CLAUDE_HOME/diff-review`. It requires Node/npm; if npm is absent the installer skips it with a warning. The UI includes a PRISM logo, drag-to-select line highlighting, and desktop notifications for session start, answered questions, and new review rounds. `install.sh` also registers a Claude Code `Notification` hook (`diff-review/server/install-hook.mjs`) so permission prompts and idle waits are surfaced as clickable desktop notifications that focus the browser window.
 
 ---
 

@@ -1,0 +1,656 @@
+/* =====================================================================
+   Base
+   ===================================================================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #0d1117;
+  color: #c9d1d9;
+}
+
+/* =====================================================================
+   Layout
+   ===================================================================== */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding: 0 0 6rem;
+}
+
+/* Two-column layout */
+.main {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.diff-pane {
+  flex: 1;
+  overflow: auto;
+}
+
+.sidebar {
+  width: 380px;
+  flex: none;
+  overflow: auto;
+  border-left: 1px solid #30363d;
+  background: #0d1117;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =====================================================================
+   Top bar
+   ===================================================================== */
+
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.top-bar-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #e6edf3;
+}
+
+.top-bar-meta {
+  font-size: 12px;
+  color: #8b949e;
+}
+
+.logo-mark {
+  width: 34px;
+  height: 25px;
+  flex: none;
+  display: block;
+}
+
+.top-bar-title {
+  letter-spacing: 0.04em;
+}
+
+.top-bar-sub {
+  font-weight: 600;
+  color: #8b949e;
+  letter-spacing: 0;
+}
+
+.notif-enable {
+  margin-left: auto;
+  flex: none;
+  padding: 0.25em 0.7em;
+  background: #21262d;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.notif-enable:hover {
+  border-color: #8b949e;
+}
+
+/* While dragging a line range, suppress native text selection so the drag
+   paints a clean block highlight instead of selecting code text. */
+.diff-pane.dragging,
+.diff-pane.dragging * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =====================================================================
+   File block
+   ===================================================================== */
+
+.diff-view {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.no-changes {
+  padding: 2rem 1rem;
+  color: #8b949e;
+  text-align: center;
+}
+
+.file-block {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.file-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.75rem;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  font-size: 12px;
+}
+
+.file-path {
+  color: #e6edf3;
+  word-break: break-all;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0 0.4em;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.status-added    { background: #1a4d2e; color: #3fb950; }
+.status-deleted  { background: #4d1a1a; color: #f85149; }
+.status-modified { background: #1c2d4a; color: #58a6ff; }
+.status-renamed  { background: #2e2a1a; color: #d29922; }
+
+/* =====================================================================
+   Diff table
+   ===================================================================== */
+
+.diff-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.col-lineno {
+  width: 3.5em;
+}
+
+.col-code {
+  width: auto;
+}
+
+/* =====================================================================
+   Hunk header
+   ===================================================================== */
+
+.hunk-header-row .hunk-header-cell {
+  padding: 0.2em 0.75em;
+  background: #1c2d4a;
+  color: #8b949e;
+  font-size: 12px;
+  border-top: 1px solid #30363d;
+  border-bottom: 1px solid #30363d;
+}
+
+/* =====================================================================
+   Diff rows and cells
+   ===================================================================== */
+
+.diff-row {
+  /* rows take natural height */
+}
+
+.line-no {
+  width: 3.5em;
+  padding: 0 0.5em;
+  text-align: right;
+  color: #484f58;
+  user-select: none;
+  vertical-align: top;
+  border-right: 1px solid #21262d;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.cell-code {
+  padding: 0 0.5em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+/* Selectable code cells show a pointer */
+td.cell-add[data-line],
+td.cell-del[data-line],
+td.cell-ctx[data-line] {
+  cursor: pointer;
+}
+
+/* Colors by line type */
+.cell-add {
+  background: #1a4d2e;
+  color: #aff5b4;
+}
+
+.cell-del {
+  background: #4d1a1a;
+  color: #ffa198;
+}
+
+.cell-ctx {
+  background: transparent;
+  color: #c9d1d9;
+}
+
+/* Filler: a line exists on one side but not the other */
+.cell-filler {
+  background: #161b22;
+  cursor: default;
+}
+
+/* Selected highlight — composes over add/del */
+.cell-code.selected {
+  background: #2d4a9a !important;
+  color: #e6edf3 !important;
+  outline: 1px solid #4d7fff;
+  outline-offset: -1px;
+}
+
+/* =====================================================================
+   Popover
+   ===================================================================== */
+
+.popover {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, calc(100vw - 2rem));
+  z-index: 200;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.popover-label {
+  font-size: 11px;
+  color: #8b949e;
+  word-break: break-all;
+}
+
+.popover-textarea {
+  width: 100%;
+  min-height: 5em;
+  padding: 0.5em;
+  background: #0d1117;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.popover-textarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.popover-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.3em 0.85em;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.1s;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-ask {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #388bfd;
+}
+
+.btn-ask:not(:disabled):hover {
+  background: #388bfd;
+}
+
+.btn-request {
+  background: #238636;
+  color: #fff;
+  border-color: #3fb950;
+}
+
+.btn-request:not(:disabled):hover {
+  background: #2ea043;
+}
+
+.btn-cancel {
+  background: transparent;
+  color: #8b949e;
+  border-color: #30363d;
+}
+
+.btn-cancel:hover {
+  color: #c9d1d9;
+  border-color: #484f58;
+}
+
+/* =====================================================================
+   Toast
+   ===================================================================== */
+
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 300;
+  padding: 0.4em 0.9em;
+  background: #238636;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+/* =====================================================================
+   Status messages
+   ===================================================================== */
+
+.status-message {
+  padding: 2rem 1rem;
+  color: #8b949e;
+  text-align: center;
+}
+
+.status-message.error {
+  color: #f85149;
+}
+
+/* =====================================================================
+   Sidebar sections
+   ===================================================================== */
+
+.sidebar-section {
+  flex: 1;
+  padding: 0.75rem;
+  border-bottom: 1px solid #30363d;
+  overflow: auto;
+}
+
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+  margin-bottom: 0.75rem;
+}
+
+.sidebar-empty {
+  font-size: 12px;
+  color: #484f58;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+
+/* =====================================================================
+   Thread card
+   ===================================================================== */
+
+.thread-card {
+  margin-bottom: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #161b22;
+}
+
+.thread-anchor {
+  font-size: 11px;
+  color: #8b949e;
+  margin-bottom: 0.3rem;
+  word-break: break-all;
+}
+
+.thread-question {
+  font-size: 12px;
+  color: #c9d1d9;
+  margin-bottom: 0.5rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.thread-pending {
+  font-size: 12px;
+  color: #8b949e;
+  font-style: italic;
+}
+
+.thread-answer {
+  font-size: 12px;
+  color: #c9d1d9;
+  border-top: 1px solid #21262d;
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* react-markdown output */
+.thread-answer p {
+  margin: 0 0 0.5em;
+}
+
+.thread-answer p:last-child {
+  margin-bottom: 0;
+}
+
+.thread-answer ul,
+.thread-answer ol {
+  margin: 0 0 0.5em;
+  padding-left: 1.4em;
+}
+
+.thread-answer li {
+  margin-bottom: 0.2em;
+}
+
+.thread-answer pre {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 0.5em;
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 0.4em 0;
+}
+
+.thread-answer code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 11px;
+  background: #21262d;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+
+.thread-answer pre code {
+  background: transparent;
+  padding: 0;
+}
+
+/* =====================================================================
+   Submit bar
+   ===================================================================== */
+
+.submit-bar {
+  flex-shrink: 0;
+  padding: 0.75rem;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+}
+
+.submit-bar-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+  margin-bottom: 0.6rem;
+}
+
+.submit-bar-queue {
+  margin-bottom: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.submit-bar-empty {
+  font-size: 12px;
+  color: #484f58;
+  font-style: italic;
+}
+
+.cr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  background: #0d1117;
+}
+
+.cr-row-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cr-anchor {
+  font-size: 11px;
+  color: #8b949e;
+  margin-bottom: 0.2rem;
+  word-break: break-all;
+}
+
+.cr-text {
+  font-size: 12px;
+  color: #c9d1d9;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cr-remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.cr-remove:hover:not(:disabled) {
+  color: #f85149;
+  background: rgba(248, 81, 73, 0.1);
+}
+
+.cr-remove:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.submit-bar-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-submit {
+  background: #1f6feb;
+  color: #fff;
+  border-color: #388bfd;
+}
+
+.btn-submit:not(:disabled):hover {
+  background: #388bfd;
+}
+
+.btn-finish {
+  background: transparent;
+  color: #8b949e;
+  border-color: #30363d;
+}
+
+.btn-finish:hover {
+  color: #c9d1d9;
+  border-color: #484f58;
+}
+
+/* =====================================================================
+   Session-ended overlay
+   ===================================================================== */
+
+.session-ended-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(13, 17, 23, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.session-ended-banner {
+  padding: 1.25rem 2rem;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #e6edf3;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}

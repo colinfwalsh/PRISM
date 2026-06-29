@@ -121,6 +121,8 @@ install_claude_code() {
   install_dir_contents "$SCRIPT_DIR/agents"   "$CLAUDE_HOME/agents"   "agents"
   step "skills"
   install_dir_contents "$SCRIPT_DIR/skills"   "$CLAUDE_HOME/skills"   "skills"
+  step "diff-review tool"
+  install_diff_review_tool
 }
 
 install_windsurf() {
@@ -132,6 +134,30 @@ install_windsurf() {
 
   warn "Windsurf does not natively support sub-agents or skills the way Claude Code does."
   warn "Only commands are installed as workflows. Agents and skills are Claude Code-only."
+}
+
+install_diff_review_tool() {
+  if ! command -v npm >/dev/null 2>&1; then
+    warn "npm not found — skipping diff-review tool (install Node.js to enable /diff_review)."
+    return 0
+  fi
+
+  step "building diff-review (npm ci && npm run build)"
+  ( cd "$SCRIPT_DIR/diff-review" && npm ci && npm run build )
+
+  local dest="$CLAUDE_HOME/diff-review"
+  mkdir -p "$dest"
+  copy_with_backup "$SCRIPT_DIR/diff-review/server" "$dest"
+  copy_with_backup "$SCRIPT_DIR/diff-review/dist" "$dest"
+  copy_with_backup "$SCRIPT_DIR/diff-review/package.json" "$dest"
+  ok "Installed diff-review tool → ${DIM}$dest${RESET}"
+
+  step "diff-review notification hook"
+  if CLAUDE_HOME="$CLAUDE_HOME" node "$SCRIPT_DIR/diff-review/server/install-hook.mjs"; then
+    ok "registered Notification hook in $CLAUDE_HOME/settings.json"
+  else
+    warn "could not register the diff-review Notification hook (skipping)"
+  fi
 }
 
 # ──────────────────────────────────────────────────────────────────────────────

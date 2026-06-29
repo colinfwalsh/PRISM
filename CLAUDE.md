@@ -4,78 +4,69 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a monorepo containing two distinct but interconnected project groups:
+PRISM is a toolkit of slash commands, sub-agents, and skills for structured AI coding workflows. It is a *distribution* repo: the markdown definitions here are copied into your AI coding tools by `install.sh`. It targets **Claude Code** (commands + agents + skills) and **Windsurf** (commands installed as workflows).
 
-**Project 1: HumanLayer SDK & Platform** - The core product providing human-in-the-loop capabilities for AI agents
-**Project 2: Local Tools Suite** - Tools that leverage HumanLayer SDK to provide rich approval experiences
+The name tracks five workflow phases — **P**lan, **R**esearch, **I**mplement, **S**ynthesize, **M**aintain. See `README.md` for the full catalog of what ships and how the pieces fit together.
 
-## Project 1: HumanLayer SDK & Platform
+## Repository Structure
 
-### Components
-- `humanlayer-ts/` - TypeScript SDK for Node.js and browser environments
-- `humanlayer-go/` - Minimal Go client for building tools
-- `humanlayer-ts-vercel-ai-sdk/` - Specialized integration for Vercel AI SDK
-- `docs/` - Mintlify documentation site
+- `commands/` — slash commands (`/<name>` in Claude Code). One markdown file per command.
+- `agents/` — sub-agent definitions invoked via the Task tool (Claude Code only).
+- `skills/` — skills, each a `<name>/SKILL.md` plus any bundled scripts/assets (Claude Code only).
+- `install.sh` — interactive installer that copies the above into `$CLAUDE_HOME` (default `~/.claude`) and/or a Windsurf project.
+- `README.md` — the source of truth for the installed catalog. Keep it in sync.
+- `diff-review/` — runnable tool code (a zero-runtime-dependency Node server + React/Vite UI) backing `/diff_review`; lives at the repo root, separate from the markdown definitions, and is built/deployed by `install.sh`; `install.sh` also registers a Claude Code `Notification` hook (via `diff-review/server/install-hook.mjs`) that bridges permission prompts and idle waits to the browser as desktop notifications.
 
-### Core Concepts
-- **Contact Channels**: Slack, Email, CLI, and web interfaces for human interaction
-- **Multi-language Support**: Feature parity across TypeScript and Go SDKs
+This repo ships markdown definitions plus the `diff-review/` tool; aside from `diff-review/` (which has its own Node build) there is no build step or test suite at the root, and `install.sh` is plain bash.
 
-## Project 2: Local Tools Suite
+## Authoring Conventions
 
-### Components
-- `hld/` - Go daemon that coordinates approvals and manages Claude Code sessions
-- `hlyr/` - TypeScript CLI with MCP (Model Context Protocol) server for Claude integration
-- `humanlayer-wui/` - CodeLayer - Desktop/Web UI (Tauri + React) for graphical approval management
-- `claudecode-go/` - Go SDK for programmatically launching Claude Code sessions
+### Commands (`commands/*.md`)
 
-### Architecture Flow
-```
-Claude Code → MCP Protocol → hlyr → JSON-RPC → hld → HumanLayer Cloud API
-                                         ↑         ↑
-                                    TUI ─┘         └─ WUI
+```yaml
+---
+description: One-sentence description of what the command does.
+model: opus   # optional; omit to inherit the session model
+---
 ```
 
-## Development Commands
+The filename (minus `.md`) becomes the command name. Bodies typically open with a `## Use Subagents As Much As Possible` section, then a step-by-step process, an output format, and guidelines.
 
-### Quick Actions
-- `make setup` - Resolve dependencies and installation issues across the monorepo
-- `make check-test` - Run all checks and tests
-- `make check` - Run linting and type checking
-- `make test` - Run all test suites
+### Sub-agents (`agents/*.md`)
 
-### GitHub Workflows
-- **Trigger macOS nightly build**: `gh workflow run "Build macOS Release Artifacts" --repo humanlayer/humanlayer`
-- Workflow definitions are located in `.github/workflows/`
+```yaml
+---
+name: agent-name
+description: What the agent does and exactly when to call it.
+tools: Read, Grep, Glob, LS
+model: sonnet   # sonnet for most; opus for heavy reasoning
+---
+```
 
+Bodies follow a consistent shape: a role statement, a `## CRITICAL` constraints block, core responsibilities, a workflow, an output format, and guidelines.
 
-### TypeScript Development
-- Package managers vary - check `package.json` for npm or bun
-- Build/test commands differ - check `package.json` scripts section
-- Some use Jest, others Vitest, check `package.json` devDependencies
+### Skills (`skills/<name>/SKILL.md`)
 
-### Go Development
-- Check `go.mod` for Go version (varies between 1.21 and 1.24)
-- Check if directory has a `Makefile` for available commands
-- Integration tests only in some projects (look for `-tags=integration`)
+```yaml
+---
+name: skill-name
+description: What the skill covers and when to use it.
+---
+```
 
-## Technical Guidelines
+A skill directory may bundle scripts and assets alongside `SKILL.md`.
 
-### TypeScript
-- Modern ES6+ features
-- Strict TypeScript configuration
-- Maintain CommonJS/ESM compatibility
+### When adding a command / agent / skill
 
-### Go
-- Standard Go idioms
-- Context-first API design
-- Generate mocks with `make mocks` when needed
+1. Create the file(s) in the appropriate directory with correct frontmatter.
+2. Update `README.md` to list it in the relevant table.
+3. If other commands or agents should reference it, update them too.
 
 ## Development Conventions
 
 ### TODO Annotations
 
-We use a priority-based TODO annotation system throughout the codebase:
+We use a priority-based TODO annotation system:
 
 - `TODO(0)`: Critical - never merge
 - `TODO(1)`: High - architectural flaws, major bugs
@@ -85,4 +76,5 @@ We use a priority-based TODO annotation system throughout the codebase:
 - `PERF`: Performance optimization opportunities
 
 ## Additional Resources
-- Consult `docs/` for user-facing documentation
+
+- `README.md` — full catalog of commands, agents, and skills, plus the `~/thoughts/` workspace layout.

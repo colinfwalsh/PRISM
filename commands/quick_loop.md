@@ -158,9 +158,9 @@ Assistant: [reads status command, locates the flag-parsing + output code via cod
 [Scope Gate: single command, mirrors existing --verbose flag, one file → in scope]
 
 Quick plan for: add --json flag to `status`
-- Files: hlyr/src/commands/status.ts:40 (flag def), :88 (output)
+- Files: src/commands/status.ts:40 (flag def), :88 (output)
 - Change: register --json bool flag; when set, JSON.stringify the result object instead of the table render
-- Acceptance: `make -C hlyr check test`; `hlyr status --json` emits valid JSON
+- Acceptance: `make check test`; `status --json` emits valid JSON
 - Out of scope: changing the default human-readable output
 
 Look right? (reply to adjust, or 'go' to implement)

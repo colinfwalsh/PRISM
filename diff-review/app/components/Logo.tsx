@@ -2,10 +2,11 @@
 // phase colors (Plan / Research / Implement / Synthesize / Maintain). Colors
 // are the web equivalents of the installer's xterm-256 palette so the web UI
 // matches the terminal banner.
-export default function Logo() {
+interface LogoProps { animated?: boolean; }
+export default function Logo({ animated = false }: LogoProps) {
   return (
     <svg
-      className="logo-mark"
+      className={`logo-mark${animated ? " logo-mark-animated" : ""}`}
       viewBox="0 0 44 32"
       role="img"
       aria-label="PRISM"

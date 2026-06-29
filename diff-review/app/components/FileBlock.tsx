@@ -1,7 +1,8 @@
-import { Fragment } from "react";
+import { Fragment, useMemo } from "react";
 import { DiffFile, DiffLine, Hunk } from "../api";
 import { Selection } from "../types";
 import HunkRow from "./HunkRow";
+import { languageForPath, highlightLine } from "../highlight";
 
 interface Row {
   left: DiffLine | null;
@@ -50,6 +51,17 @@ export default function FileBlock({
   onLineEnter,
 }: FileBlockProps) {
   const fileKey = file.newPath ?? file.oldPath ?? "(unknown)";
+  const lang = languageForPath(fileKey);
+
+  const hunkRows = useMemo(
+    () => file.hunks.map((hunk) =>
+      pairLines(hunk).map((row) => ({
+        ...row,
+        leftHtml: row.left ? highlightLine(row.left.content, lang) : null,
+        rightHtml: row.right ? highlightLine(row.right.content, lang) : null,
+      }))),
+    [file, lang]
+  );
 
   const pathDisplay =
     file.status === "renamed" ? (
@@ -81,7 +93,7 @@ export default function FileBlock({
                   {hunk.header}
                 </td>
               </tr>
-              {pairLines(hunk).map((row, ri) => (
+              {hunkRows[hi].map((row, ri) => (
                 <HunkRow
                   key={`${hi}-${ri}`}
                   row={row}
@@ -89,6 +101,8 @@ export default function FileBlock({
                   selection={selection}
                   onLineMouseDown={onLineMouseDown}
                   onLineEnter={onLineEnter}
+                  leftHtml={row.leftHtml}
+                  rightHtml={row.rightHtml}
                 />
               ))}
             </Fragment>

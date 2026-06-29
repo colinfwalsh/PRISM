@@ -7,6 +7,8 @@ interface HunkRowProps {
   selection: Selection | null;
   onLineMouseDown: (file: string, side: "old" | "new", line: number, shiftKey: boolean) => void;
   onLineEnter: (file: string, side: "old" | "new", line: number) => void;
+  leftHtml: string | null;
+  rightHtml: string | null;
 }
 
 function inSelection(
@@ -30,6 +32,8 @@ export default function HunkRow({
   selection,
   onLineMouseDown,
   onLineEnter,
+  leftHtml,
+  rightHtml,
 }: HunkRowProps) {
   const { left, right } = row;
 
@@ -59,11 +63,10 @@ export default function HunkRow({
             onLineMouseDown(fileKey, "old", leftLineNo!, e.shiftKey);
           }}
           onMouseEnter={() => onLineEnter(fileKey, "old", leftLineNo!)}
-        >
-          {left.content}
-        </td>
+          dangerouslySetInnerHTML={{ __html: leftHtml ?? "" }}
+        />
       ) : (
-        <td className={`cell-code cell-${left.type}`}>{left.content}</td>
+        <td className={`cell-code cell-${left.type}`} dangerouslySetInnerHTML={{ __html: leftHtml ?? "" }} />
       )}
 
       <td className="line-no">{rightLineNo !== null ? rightLineNo : ""}</td>
@@ -81,11 +84,10 @@ export default function HunkRow({
             onLineMouseDown(fileKey, "new", rightLineNo!, e.shiftKey);
           }}
           onMouseEnter={() => onLineEnter(fileKey, "new", rightLineNo!)}
-        >
-          {right.content}
-        </td>
+          dangerouslySetInnerHTML={{ __html: rightHtml ?? "" }}
+        />
       ) : (
-        <td className={`cell-code cell-${right.type}`}>{right.content}</td>
+        <td className={`cell-code cell-${right.type}`} dangerouslySetInnerHTML={{ __html: rightHtml ?? "" }} />
       )}
     </tr>
   );

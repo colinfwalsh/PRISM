@@ -17,6 +17,7 @@ import SelectionPopover from "./components/SelectionPopover";
 import Thread from "./components/Thread";
 import SubmitBar from "./components/SubmitBar";
 import Logo from "./components/Logo";
+import LoadingOverlay from "./components/LoadingOverlay";
 import {
   fireNotification,
   notificationPermission,
@@ -192,9 +193,15 @@ export default function App() {
 
   const handleSubmit = useCallback(async () => {
     setSubmitting(true);
-    await submit();
-    // Queue stays visible and greyed via submitting flag until round bumps and clears it
-  }, []);
+    try {
+      const res = await submit();
+      if (!res.ok) throw new Error("submit not ok");
+      // success: leave submitting=true; the round bump clears it
+    } catch {
+      setSubmitting(false);
+      showToast("Submit failed — try again");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFinish = useCallback(async () => {
     await finish();
@@ -331,7 +338,7 @@ export default function App() {
   }
 
   if (!data) {
-    return <p className="status-message">Loading…</p>;
+    return <LoadingOverlay message="Loading diff…" />;
   }
 
   const baseLabel = data.baseRef ? `vs ${data.baseRef}` : "working tree";
@@ -399,6 +406,7 @@ export default function App() {
         />
       )}
       {toast && <div className="toast">{toast}</div>}
+      {submitting && <LoadingOverlay message="Applying your change requests…" />}
     </div>
   );
 }
